@@ -12,11 +12,8 @@ import org.nbone.spring.cloud.exception.HttpStatusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
 
 
 /**
@@ -49,7 +46,7 @@ public class FeignClientErrorDecoder implements ErrorDecoder {
                 return new RuntimeException(body);
             }
 
-            String exceptionName = exceptionInfo.getExceptionName();
+            String exceptionName = exceptionInfo.getException();
             int statusCode       = exceptionInfo.getStatusCode();
             int code         = exceptionInfo.getCode();
             String message       = exceptionInfo.getMessage();

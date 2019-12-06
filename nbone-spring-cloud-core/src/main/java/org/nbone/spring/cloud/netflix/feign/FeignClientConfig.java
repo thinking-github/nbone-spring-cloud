@@ -28,14 +28,6 @@ import static feign.Util.valuesOrEmpty;
 @Configuration
 public class FeignClientConfig {
 
-    public static void main(String[] args) {
-        System.out.println(Logger.Level.NONE.ordinal());
-        System.out.println(Logger.Level.BASIC.ordinal());
-        System.out.println(Logger.Level.HEADERS.ordinal());
-        System.out.println(Logger.Level.FULL.ordinal());
-
-    }
-
     @Autowired(required = false)
     private Logger logger;
 
@@ -51,97 +43,90 @@ public class FeignClientConfig {
         return feign.Logger.Level.FULL;
     }
 
+    /**
+     *
+     * @author chenyicheng
+     * @version 1.0
+     * @since 2018/1/19
+     */
+    static  class FeignLoggerFactoryx implements FeignLoggerFactory {
 
-}
+        private Logger logger;
 
-
-/**
- * 
- * @author chenyicheng
- * @version 1.0
- * @since 2018/1/19
- */
-
-class FeignLoggerFactoryx implements FeignLoggerFactory {
-
-    private Logger logger;
-
-    public FeignLoggerFactoryx(Logger logger) {
-        this.logger = logger;
-    }
-
-    @Override
-    public Logger create(Class<?> type) {
-        return this.logger != null ? this.logger : new Slf4jLoggerx(type);
-    }
-
-}
-
-
-/**
- * 
- * @author chenyicheng
- * @version 1.0
- * @since 2018/1/19
- */
-
-class Slf4jLoggerx extends Slf4jLogger {
-
-    private final org.slf4j.Logger logger;
-
-    public Slf4jLoggerx() {
-        this(feign.Logger.class);
-    }
-
-    public Slf4jLoggerx(Class<?> clazz) {
-        this(LoggerFactory.getLogger(clazz));
-    }
-
-    public Slf4jLoggerx(String name) {
-        this(LoggerFactory.getLogger(name));
-    }
-
-    Slf4jLoggerx(org.slf4j.Logger logger) {
-        this.logger = logger;
-    }
-
-    @Override
-    protected void logRequest(String configKey, Level logLevel, Request request) {
-        if (logger.isDebugEnabled()) {
-
-            log(configKey, "---> %s %s HTTP/1.1", request.method(), request.url());
-            if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
-
-                for (String field : request.headers().keySet()) {
-                    for (String value : valuesOrEmpty(request.headers(), field)) {
-                        log(configKey, "%s: %s", field, value);
-                    }
-                }
-
-                int bodyLength = 0;
-                if (request.body() != null) {
-                    bodyLength = request.body().length;
-                    if (logLevel.ordinal() >= Level.FULL.ordinal()) {
-                        String bodyText = request.charset() != null ? new String(request.body(), request.charset()) : null;
-                        log(configKey, ""); // CRLF
-                        //XXX: thinking
-                        if(bodyLength <= 2048){
-
-                            log(configKey, "thinking-request-%s", bodyText != null ? bodyText : "Binary data");
-                        }
-
-                    }
-                }
-                log(configKey, "---> END HTTP (%s-byte body)", bodyLength);
-            }
-
+        public FeignLoggerFactoryx(Logger logger) {
+            this.logger = logger;
         }
+
+        @Override
+        public Logger create(Class<?> type) {
+            return this.logger != null ? this.logger : new Slf4jLoggerx(type);
+        }
+
     }
 
-    @Override
-    protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
-                                              long elapsedTime) throws IOException {
-        if (logger.isDebugEnabled()) {
+    /**
+     *
+     * @author chenyicheng
+     * @version 1.0
+     * @since 2018/1/19
+     */
+    static class Slf4jLoggerx extends Slf4jLogger {
+
+        private final org.slf4j.Logger logger;
+
+        public Slf4jLoggerx() {
+            this(feign.Logger.class);
+        }
+
+        public Slf4jLoggerx(Class<?> clazz) {
+            this(LoggerFactory.getLogger(clazz));
+        }
+
+        public Slf4jLoggerx(String name) {
+            this(LoggerFactory.getLogger(name));
+        }
+
+        Slf4jLoggerx(org.slf4j.Logger logger) {
+            this.logger = logger;
+        }
+
+        @Override
+        protected void logRequest(String configKey, Level logLevel, Request request) {
+            if (logger.isDebugEnabled()) {
+
+                log(configKey, "---> %s %s HTTP/1.1", request.method(), request.url());
+                if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
+
+                    for (String field : request.headers().keySet()) {
+                        for (String value : valuesOrEmpty(request.headers(), field)) {
+                            log(configKey, "%s: %s", field, value);
+                        }
+                    }
+
+                    int bodyLength = 0;
+                    if (request.body() != null) {
+                        bodyLength = request.body().length;
+                        if (logLevel.ordinal() >= Level.FULL.ordinal()) {
+                            String bodyText = request.charset() != null ? new String(request.body(), request.charset()) : null;
+                            log(configKey, ""); // CRLF
+                            //XXX: thinking
+                            if(bodyLength <= 2048){
+
+                                log(configKey, "thinking-request-%s", bodyText != null ? bodyText : "Binary data");
+                            }
+
+                        }
+                    }
+                    log(configKey, "---> END HTTP (%s-byte body)", bodyLength);
+                }
+
+            }
+        }
+
+        @Override
+        protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
+                                                  long elapsedTime) throws IOException {
+            if (logger.isDebugEnabled()) {
                 String reason = response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ? " " + response.reason() : "";
                 int status = response.status();
                 log(configKey, "<--- HTTP/1.1 %s%s (%sms)", status, reason, elapsedTime);
@@ -175,31 +160,38 @@ class Slf4jLoggerx extends Slf4jLogger {
                 }
                 return response;
 
+            }
+
+            return response;
         }
 
-        return response;
-    }
-
-    @Override
-    protected void log(String configKey, String format, Object... args) {
-        if (logger.isDebugEnabled()) {
-            logger.debug(String.format(methodTag(configKey) + format, args));
+        @Override
+        protected void log(String configKey, String format, Object... args) {
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format(methodTag(configKey) + format, args));
+            }
         }
-    }
 
-
-
-    static String decodeOrDefault(byte[] data, Charset charset, String defaultValue) {
-        if (data == null) {
-            return defaultValue;
+        static String decodeOrDefault(byte[] data, Charset charset, String defaultValue) {
+            if (data == null) {
+                return defaultValue;
+            }
+            Util.checkNotNull(charset, "charset");
+            try {
+                return charset.newDecoder().decode(ByteBuffer.wrap(data)).toString();
+            } catch (CharacterCodingException ex) {
+                return defaultValue;
+            }
         }
-        Util.checkNotNull(charset, "charset");
-        try {
-            return charset.newDecoder().decode(ByteBuffer.wrap(data)).toString();
-        } catch (CharacterCodingException ex) {
-            return defaultValue;
-        }
+
+
     }
 
 
 }
+
+
+
+
+
+

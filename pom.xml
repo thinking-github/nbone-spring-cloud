@@ -94,7 +94,7 @@
             </plugin>
         </plugins>
     </build>
-    <distributionManagement>
+   <!-- <distributionManagement>
         <repository>
             <id>releases</id>
             <name>Releases</name>
@@ -107,7 +107,22 @@
             <layout>default</layout>
         </snapshotRepository>
 
+    </distributionManagement>-->
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <name>Releases</name>
+            <url>${maven.releases.url}</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>Snapshots</name>
+            <url>${maven.snapshots.url}</url>
+            <layout>default</layout>
+        </snapshotRepository>
+
     </distributionManagement>
+
 
 
 </project>
